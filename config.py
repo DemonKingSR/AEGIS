@@ -1,10 +1,14 @@
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+IS_VERCEL = os.environ.get('VERCEL') is not None or os.environ.get('VERCEL_ENV') is not None
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'aegis-shield-cyber-key-9823749237'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f'sqlite:///{os.path.join(BASE_DIR, "cyber_sec.db")}'
+    if IS_VERCEL:
+        SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/cyber_sec.db'
+    else:
+        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f'sqlite:///{os.path.join(BASE_DIR, "cyber_sec.db")}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     MODEL_DIR = os.path.join(BASE_DIR, 'ml_engine', 'saved_models')
