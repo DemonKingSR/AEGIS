@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisShield | AI-Powered Cyber Threat Detection & Incident Management</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="cyber-theme">
+    <!-- Top Bar Navigation -->
+    <header class="navbar">
+        <div class="logo-brand">
+            <div class="logo-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="logo-text">
+                <span class="brand-name">AEGIS<span class="highlight">SHIELD</span></span>
+                <span class="brand-sub">AI Threat Intelligence Platform</span>
+            </div>
+        </div>
+
+        <nav class="nav-links">
+            <button class="nav-item active" data-tab="dashboard-tab">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </button>
+            <button class="nav-item" data-tab="analyzer-tab">
+                <i class="fa-solid fa-microchip"></i> AI Threat Analyzer
+            </button>
+            <button class="nav-item" data-tab="incidents-tab">
+                <i class="fa-solid fa-triangle-exclamation"></i> Incident Hub
+                <span class="badge badge-danger" id="nav-open-count">3</span>
+            </button>
+            <button class="nav-item" data-tab="models-tab">
+                <i class="fa-solid fa-network-wired"></i> DL Model Suite
+            </button>
+            <button class="nav-item" data-tab="awareness-tab">
+                <i class="fa-solid fa-graduation-cap"></i> Cyber Awareness
+            </button>
+        </nav>
+
+        <div class="navbar-actions">
+            <div class="system-status">
+                <span class="status-dot online"></span>
+                <span class="status-label">ML Engines Active</span>
+            </div>
+            <div class="user-profile" id="user-profile-btn">
+                <i class="fa-solid fa-user-shield"></i>
+                <span id="user-display-name">SecAnalyst_Root</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- 1. DASHBOARD TAB -->
+        <section id="dashboard-tab" class="tab-content active">
+            <div class="page-header">
+                <div>
+                    <h1>Security Operations Center (SOC)</h1>
+                    <p class="subtitle">Real-time deep learning anomaly detection and threat triage overview</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" id="refresh-dashboard-btn">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh Feeds
+                    </button>
+                    <button class="btn btn-primary" id="btn-quick-analyze">
+                        <i class="fa-solid fa-bolt"></i> Run Payload Scan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon icon-cyan">
+                        <i class="fa-solid fa-shield-virus"></i>
+                    </div>
+                    <div class="stat-data">
+                        <span class="stat-title">Total Scanned Logs</span>
+                        <h2 class="stat-value" id="stat-total-scanned">142,850</h2>
+                        <span class="stat-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +12.4% today</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-danger">
+                        <i class="fa-solid fa-bug"></i>
+                    </div>
+                    <div class="stat-data">
+                        <span class="stat-title">Threats Detected</span>
+                        <h2 class="stat-value" id="stat-threats-detected">1,482</h2>
+                        <span class="stat-trend trend-down"><i class="fa-solid fa-shield"></i> Blocked 99.4%</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-warning">
+                        <i class="fa-solid fa-fire-extinguisher"></i>
+                    </div>
+                    <div class="stat-data">
+                        <span class="stat-title">Active Incidents</span>
+                        <h2 class="stat-value" id="stat-active-incidents">7</h2>
+                        <span class="stat-trend text-warning"><i class="fa-solid fa-clock"></i> 3 High Priority</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div class="stat-data">
+                        <span class="stat-title">Ensemble Model Acc.</span>
+                        <h2 class="stat-value" id="stat-model-accuracy">98.7%</h2>
+                        <span class="stat-trend trend-up"><i class="fa-solid fa-check-double"></i> ANN + LSTM + CNN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid">
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-area"></i> Live Network Anomaly Stream (LSTM Monitor)</h3>
+                        <span class="pill pill-live"><i class="fa-solid fa-circle"></i> Live 1s</span>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="liveAnomalyChart" height="220"></canvas>
+                    </div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Attack Vector Distribution (CNN Classifier)</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="attackDistChart" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Threat Logs & Active Incidents -->
+            <div class="grid-2col">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-terminal"></i> Live Threat Telemetry Feed</h3>
+                        <button class="btn-sm btn-ghost" id="clear-feed-btn">Clear View</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="telemetry-feed" id="telemetry-feed-container">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-list-check"></i> High Severity Incidents Pending Triage</h3>
+                        <button class="btn-sm btn-outline" id="btn-dash-view-all">View All</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="incident-mini-list" id="dashboard-incident-list">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. AI THREAT ANALYZER TAB -->
+        <section id="analyzer-tab" class="tab-content">
+            <div class="page-header">
+                <div>
+                    <h1>AI Multi-Model Threat Analyzer</h1>
+                    <p class="subtitle">Run real-time neural network inference using custom network vectors, HTTP payloads, or log lines</p>
+                </div>
+            </div>
+
+            <div class="analyzer-layout">
+                <!-- Left Column: Input Form & Samples -->
+                <div class="analyzer-input-pane">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-code"></i> Payload / Network Vector Input</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Select Analysis Mode:</label>
+                                <div class="radio-toggle-group">
+                                    <label class="radio-pill active">
+                                        <input type="radio" name="input_mode" value="payload" checked> Raw HTTP/SQL Payload (CNN)
+                                    </label>
+                                    <label class="radio-pill">
+                                        <input type="radio" name="input_mode" value="vector"> Network Flow Vector (ANN)
+                                    </label>
+                                    <label class="radio-pill">
+                                        <input type="radio" name="input_mode" value="sequence"> Time-Series Traffic Log (LSTM)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="payload-input">Enter Log String, HTTP Payload or Tabular Vector:</label>
+                                <textarea id="payload-input" class="cyber-textarea" rows="6" placeholder="e.g. SELECT * FROM users WHERE username = 'admin' OR '1'='1'; --"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Load Preset Attack Sample:</label>
+                                <div class="sample-btn-group">
+                                    <button class="btn-sample" data-sample="sqli">SQL Injection</button>
+                                    <button class="btn-sample" data-sample="ddos">SYN Flood DDoS</button>
+                                    <button class="btn-sample" data-sample="xss">Cross-Site Scripting (XSS)</button>
+                                    <button class="btn-sample" data-sample="bruteforce">SSH Brute Force</button>
+                                    <button class="btn-sample" data-sample="normal">Normal Traffic</button>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="btn btn-primary btn-block" id="btn-run-analysis">
+                                    <i class="fa-solid fa-microchip"></i> Execute Multi-Model Deep Learning Scan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: DL Prediction Results -->
+                <div class="analyzer-result-pane">
+                    <div class="card result-card" id="analysis-result-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-radar"></i> Deep Learning Inference Report</h3>
+                            <span class="badge badge-info" id="model-status-badge">Idle</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="threat-score-banner normal-state" id="threat-verdict-banner">
+                                <div class="verdict-icon" id="verdict-icon">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+                                <div class="verdict-details">
+                                    <span class="verdict-label">Overall Classification Verdict</span>
+                                    <h2 id="verdict-title">System Normal</h2>
+                                    <p id="verdict-desc">Select an attack payload or input network logs above to run neural network evaluation.</p>
+                                </div>
+                            </div>
+
+                            <!-- Model Breakdowns -->
+                            <div class="model-breakdown-grid">
+                                <!-- ANN Card -->
+                                <div class="model-res-box">
+                                    <div class="res-box-header">
+                                        <span class="model-title"><i class="fa-solid fa-network-wired"></i> ANN Model</span>
+                                        <span class="model-tag">Severity Classification</span>
+                                    </div>
+                                    <div class="res-box-body">
+                                        <div class="res-metric">
+                                            <span>Predicted Severity:</span>
+                                            <strong id="ann-severity-val">--</strong>
+                                        </div>
+                                        <div class="res-metric">
+                                            <span>Confidence Score:</span>
+                                            <strong id="ann-conf-val">--%</strong>
+                                        </div>
+                                        <div class="progress-bar-wrap">
+                                            <div class="progress-bar" id="ann-progress" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- LSTM Card -->
+                                <div class="model-res-box">
+                                    <div class="res-box-header">
+                                        <span class="model-title"><i class="fa-solid fa-clock-rotate-left"></i> LSTM Model</span>
+                                        <span class="model-tag">Sequence Anomaly</span>
+                                    </div>
+                                    <div class="res-box-body">
+                                        <div class="res-metric">
+                                            <span>Anomaly Score:</span>
+                                            <strong id="lstm-anomaly-val">--</strong>
+                                        </div>
+                                        <div class="res-metric">
+                                            <span>Confidence:</span>
+                                            <strong id="lstm-conf-val">--%</strong>
+                                        </div>
+                                        <div class="progress-bar-wrap">
+                                            <div class="progress-bar" id="lstm-progress" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- CNN Card -->
+                                <div class="model-res-box">
+                                    <div class="res-box-header">
+                                        <span class="model-title"><i class="fa-solid fa-eye"></i> CNN Model</span>
+                                        <span class="model-tag">Payload Attack Pattern</span>
+                                    </div>
+                                    <div class="res-box-body">
+                                        <div class="res-metric">
+                                            <span>Recognized Attack:</span>
+                                            <strong id="cnn-attack-val">--</strong>
+                                        </div>
+                                        <div class="res-metric">
+                                            <span>Confidence:</span>
+                                            <strong id="cnn-conf-val">--%</strong>
+                                        </div>
+                                        <div class="progress-bar-wrap">
+                                            <div class="progress-bar" id="cnn-progress" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mitigation Advice -->
+                            <div class="mitigation-box" id="mitigation-box" style="display: none;">
+                                <h4><i class="fa-solid fa-shield-virus"></i> Automated Countermeasure & Mitigation:</h4>
+                                <ul id="mitigation-list">
+                                    <li>Block source IP address at firewall perimeter.</li>
+                                    <li>Sanitize input using parameterize query bindings.</li>
+                                </ul>
+                                <button class="btn btn-danger btn-sm mt-3" id="btn-escalate-incident">
+                                    <i class="fa-solid fa-plus"></i> Auto-Create High Priority Incident Ticket
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. INCIDENT HUB TAB -->
+        <section id="incidents-tab" class="tab-content">
+            <div class="page-header">
+                <div>
+                    <h1>Incident Management & Triage Portal</h1>
+                    <p class="subtitle">Track reported threats, assign analyst status, and review automated AI incident reports</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="btn-open-incident-modal">
+                        <i class="fa-solid fa-plus"></i> Report New Incident
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body p-3">
+                    <div class="filter-bar">
+                        <div class="search-input">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="incident-search" placeholder="Search by title, attack type, or IP address...">
+                        </div>
+                        <div class="filter-group">
+                            <select id="filter-severity" class="cyber-select">
+                                <option value="ALL">All Severities</option>
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            <select id="filter-status" class="cyber-select">
+                                <option value="ALL">All Statuses</option>
+                                <option value="Open">Open</option>
+                                <option value="Investigating">Investigating</option>
+                                <option value="Resolved">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Incidents Table -->
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="cyber-table">
+                            <thead>
+                                <tr>
+                                    <th>Incident ID</th>
+                                    <th>Title & Description</th>
+                                    <th>Attack Category</th>
+                                    <th>AI Model Severity</th>
+                                    <th>Source IP</th>
+                                    <th>Status</th>
+                                    <th>Reported At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incidents-table-body">
+                                <!-- Populated dynamically via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. DL MODEL SUITE TAB -->
+        <section id="models-tab" class="tab-content">
+            <div class="page-header">
+                <div>
+                    <h1>Deep Learning Model Architectures & Performance</h1>
+                    <p class="subtitle">Detailed breakdown of ANN, LSTM, and CNN neural network models powering AegisShield</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-outline" id="btn-retrain-models">
+                        <i class="fa-solid fa-gears"></i> Trigger Retraining Pipeline
+                    </button>
+                </div>
+            </div>
+
+            <div class="models-grid">
+                <!-- ANN Card -->
+                <div class="card model-detail-card">
+                    <div class="card-header">
+                        <div class="model-badge-icon icon-cyan"><i class="fa-solid fa-network-wired"></i></div>
+                        <div>
+                            <h3>ANN - Artificial Neural Network</h3>
+                            <p>Tabular Threat Severity Classifier</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="model-stat-row">
+                            <div class="m-stat">
+                                <span class="m-label">Accuracy</span>
+                                <span class="m-val text-cyan">98.4%</span>
+                            </div>
+                            <div class="m-stat">
+                                <span class="m-label">F1-Score</span>
+                                <span class="m-val">0.981</span>
+                            </div>
+                            <div class="m-stat">
+                                <span class="m-label">Input Shape</span>
+                                <span class="m-val">42 Features</span>
+                            </div>
+                        </div>
+                        <div class="arch-desc">
+                            <h4>Architecture Overview:</h4>
+                            <ul>
+                                <li><strong>Input Layer:</strong> 42 Tabular Network Metrics (Bytes, Duration, Packets, Error rates)</li>
+                                <li><strong>Hidden Layers:</strong> Dense(128, ReLU) -> Dropout(0.3) -> Dense(64, ReLU)</li>
+                                <li><strong>Output Layer:</strong> Softmax 4-class (Low, Medium, High, Critical)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LSTM Card -->
+                <div class="card model-detail-card">
+                    <div class="card-header">
+                        <div class="model-badge-icon icon-purple"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div>
+                            <h3>LSTM - Long Short-Term Memory</h3>
+                            <p>Sequential Anomaly & Time-Series Detector</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="model-stat-row">
+                            <div class="m-stat">
+                                <span class="m-label">Accuracy</span>
+                                <span class="m-val text-purple">97.2%</span>
+                            </div>
+                            <div class="m-stat">
+                                <span class="m-label">F1-Score</span>
+                                <span class="m-val">0.969</span>
+                            </div>
+                            <div class="m-stat">
+                                <span class="m-label">Timesteps</span>
+                                <span class="m-val">10 Window</span>
+                            </div>
+                        </div>
+                        <div class="arch-desc">
+                            <h4>Architecture Overview:</h4>
+                            <ul>
+                                <li><strong>Input Layer:</strong> Time-series sequence (10 timesteps x 8 metrics)</li>
+                                <li><strong>Recurrent Layers:</strong> LSTM(64 units, return_sequences=True) -> LSTM(32 units)</li>
+                                <li><strong>Output Layer:</strong> Dense(1, Sigmoid) for binary anomaly score</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CNN Card -->
+                <div class="card model-detail-card">
+                    <div class="card-header">
+                        <div class="model-badge-icon icon-danger"><i class="fa-solid fa-eye"></i></div>
+                        <div>
+                            <h3>CNN - 1D Convolutional Network</h3>
+                            <p>Payload & Attack Signature Recognizer</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="model-stat-row">
+                            <div class="m-stat">
+                                <span class="m-label">Accuracy</span>
+                                <span class="m-val text-danger">99.1%</span>
+                            </div>
+                            <div class="m-stat">
+                                <span class="m-label">F1-Score</span>
+                                <span class="m-val">0.989</span>
+                            </div>
+                            <div class="m-stat">
+                                <span class="m-label">Vector Space</span>
+                                <span class="m-val">256 Character Map</span>
+                            </div>
+                        </div>
+                        <div class="arch-desc">
+                            <h4>Architecture Overview:</h4>
+                            <ul>
+                                <li><strong>Input Layer:</strong> Embedding / 1D Byte-mapped Payload Strings (256 length)</li>
+                                <li><strong>Conv Layers:</strong> Conv1D(64 filters, kernel=3) -> MaxPool1D -> Conv1D(128 filters)</li>
+                                <li><strong>Output Layer:</strong> Softmax Multi-class (DDoS, SQLi, XSS, BruteForce, Malware, Normal)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. CYBER AWARENESS TAB -->
+        <section id="awareness-tab" class="tab-content">
+            <div class="page-header">
+                <div>
+                    <h1>Cybersecurity Awareness & Training Hub</h1>
+                    <p class="subtitle">Interactive advisories, phishing recognition quizzes, and threat response guidelines</p>
+                </div>
+            </div>
+
+            <div class="grid-2col mb-4">
+                <!-- Phishing Quiz Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-gamepad"></i> Interactive Phishing & Threat Quiz</h3>
+                        <span class="pill pill-cyan" id="quiz-score-pill">Score: 0 / 0</span>
+                    </div>
+                    <div class="card-body" id="quiz-container">
+                        <div id="quiz-question-box">
+                            <h4 id="quiz-question-title">Question 1: Recognizing Suspicious URLs</h4>
+                            <p id="quiz-question-text" class="my-3">You receive an email claiming your corporate IT password expires in 1 hour. The link directs to `http://login.microsoft-sec-portal.net/auth`. What should you do?</p>
+                            <div class="quiz-options" id="quiz-options">
+                                <!-- Options rendered via JS -->
+                            </div>
+                        </div>
+                        <div class="form-actions mt-4">
+                            <button class="btn btn-outline" id="quiz-next-btn" style="display: none;">Next Question <i class="fa-solid fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Advisories -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-bullhorn"></i> Live Threat Bulletins & Best Practices</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="advisory-item">
+                            <div class="advisory-badge badge-danger">CRITICAL</div>
+                            <div class="advisory-content">
+                                <h4>Preventing SQL Injection (SQLi) Vulnerabilities</h4>
+                                <p>Always use parameterized SQL queries or ORM frameworks (e.g. SQLAlchemy, Hibernate). Never concatenate user input directly into SQL strings.</p>
+                            </div>
+                        </div>
+
+                        <div class="advisory-item">
+                            <div class="advisory-badge badge-warning">HIGH</div>
+                            <div class="advisory-content">
+                                <h4>DDoS Mitigation & Rate Limiting</h4>
+                                <p>Deploy Web Application Firewalls (WAF) and configure IP rate limiting at the reverse proxy (Nginx/Cloudflare) layer to mitigate HTTP floods.</p>
+                            </div>
+                        </div>
+
+                        <div class="advisory-item">
+                            <div class="advisory-badge badge-info">INFO</div>
+                            <div class="advisory-content">
+                                <h4>Multi-Factor Authentication (MFA) Policy</h4>
+                                <p>Enforce FIDO2/TOTP hardware or authenticator app-based MFA for all SOC analyst logins to prevent credential stuffing attacks.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- NEW INCIDENT MODAL -->
+    <div class="modal-backdrop" id="modal-incident">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-shield-cat"></i> Report Cybersecurity Incident</h3>
+                <button class="btn-close" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="incident-form">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inc-title">Incident Title *</label>
+                        <input type="text" id="inc-title" class="cyber-input" placeholder="e.g. Suspicious SQL execution attempt on port 443" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inc-attack-type">Attack Category *</label>
+                        <select id="inc-attack-type" class="cyber-select" required>
+                            <option value="SQL Injection">SQL Injection (SQLi)</option>
+                            <option value="DDoS Attack">Distributed Denial of Service (DDoS)</option>
+                            <option value="XSS Attack">Cross-Site Scripting (XSS)</option>
+                            <option value="Brute Force">Brute Force Authentication</option>
+                            <option value="Malware Traffic">Malware C2 Communication</option>
+                            <option value="Unusual Activity">Unusual Anomaly Stream</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="inc-severity">Initial Severity</label>
+                            <select id="inc-severity" class="cyber-select">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High" selected>High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group col-6">
+                            <label for="inc-source-ip">Source IP Address</label>
+                            <input type="text" id="inc-source-ip" class="cyber-input" placeholder="192.168.1.105" value="198.51.100.42">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inc-desc">Incident Description & Raw Logs</label>
+                        <textarea id="inc-desc" class="cyber-textarea" rows="4" placeholder="Provide log snippets or detailed description..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btn-cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i> Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
