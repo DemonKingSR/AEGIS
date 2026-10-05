@@ -1,6 +1,5 @@
 import os
 import sys
-import re
 import numpy as np
 from flask import Flask, render_template, request, jsonify
 from config import Config
@@ -65,14 +64,10 @@ def predict_threat():
 
     lower = payload_str.lower()
 
-    # ---------------------------------------------------------
-    # 1. CNN Model - Payload Attack Signature Recognizer
-    # ---------------------------------------------------------
+    # 1. CNN Model
     cnn_res = cnn_engine.predict([payload_str])[0]
 
-    # ---------------------------------------------------------
-    # 2. ANN Model - Tabular Network Feature Severity Classifier
-    # ---------------------------------------------------------
+    # 2. ANN Model
     if 'critical' in lower or 'src_bytes=15000' in lower or 'failed_logins=12' in lower:
         ann_vector = [[0.5, 15000, 200, 12, 850, 0.95, 0.85, 8, 0.5, 0.5]]
     elif 'high' in lower or 'failed_logins=5' in lower or 'src_bytes=1800' in lower:
@@ -86,14 +81,11 @@ def predict_threat():
     elif 'failed password' in lower or 'sshd' in lower:
         ann_vector = [[5.0, 120, 0, 8, 85, 0.30, 0.35, 2, 0.5, 0.5]]
     else:
-        # Normal Traffic / Safe Vector
         ann_vector = [[2.0, 350, 1200, 0, 8, 0.01, 0.02, 0, 0.5, 0.5]]
 
     ann_res = ann_engine.predict(ann_vector)[0]
 
-    # ---------------------------------------------------------
-    # 3. LSTM Model - Time-Series Anomaly Sequence Detector
-    # ---------------------------------------------------------
+    # 3. LSTM Model
     is_seq_anomaly = any(k in lower for k in ['pkts=920', 'pkts=980', 'pkts=1200', 'err=0.88', 'err=0.94', 'cpu=96%', 'cpu=99%', 'syn spike', 'portscan', 'pkts=400', 'syn_flood'])
     is_seq_normal = any(k in lower for k in ['normal', 'pkts=45', 'pkts=50', 'err=0.01', 'cpu=12%', 'cpu=14%']) and not is_seq_anomaly
 
@@ -102,7 +94,6 @@ def predict_threat():
     elif is_seq_normal:
         seq = [[[45, 1800, 0.01, 12], [50, 2100, 0.00, 15], [42, 1750, 0.01, 14]]]
     else:
-        # Contextual sequence fallback based on CNN & ANN
         if cnn_res['is_attack'] or ann_res['severity_code'] >= 2:
             seq = [[[52, 2100, 0.01, 18], [48, 1950, 0.02, 20], [920, 58000, 0.88, 96], [980, 62000, 0.94, 99]]]
         else:
@@ -110,11 +101,8 @@ def predict_threat():
 
     lstm_res = lstm_engine.predict(seq)[0]
 
-    # ---------------------------------------------------------
-    # 4. Mode Synchronization & Ensemble Decision Logic
-    # ---------------------------------------------------------
+    # Mode Adjustments
     if mode == 'sequence':
-        # Prioritize LSTM sequence model when in sequence mode
         is_threat = lstm_res['is_anomaly']
         if is_threat:
             cnn_res['is_attack'] = True
@@ -128,7 +116,6 @@ def predict_threat():
             ann_res['severity_code'] = 0
 
     elif mode == 'vector':
-        # Prioritize ANN tabular model when in vector mode
         is_threat = ann_res['severity_code'] >= 2
         if is_threat:
             cnn_res['is_attack'] = True
@@ -142,7 +129,6 @@ def predict_threat():
             lstm_res['anomaly_score'] = 0.04
 
     else:
-        # Standard Payload mode (CNN prioritized)
         is_threat = cnn_res['is_attack'] or lstm_res['is_anomaly'] or ann_res['severity_code'] >= 2
 
     # Overall Ensemble Verdict
@@ -179,6 +165,9 @@ def predict_threat():
         'cnn': cnn_res
     })
 
+# -------------------------------------------------------------
+# INCIDENT HUB PERSISTENT CRUD ENDPOINTS
+# -------------------------------------------------------------
 @app.route('/api/incidents', methods=['GET'])
 def get_incidents():
     incidents = Incident.query.order_by(Incident.created_at.desc()).all()
@@ -203,16 +192,31 @@ def create_incident():
 
 @app.route('/api/incidents/<inc_id>', methods=['PUT'])
 def update_incident(inc_id):
-    inc = Incident.query.get_or_404(inc_id)
+    inc = Incident.query.get(inc_id)
+    if not inc:
+        return jsonify({'error': 'Incident not found'}), 404
+
     data = request.get_json() or {}
-    
     if 'status' in data:
         inc.status = data['status']
     if 'severity' in data:
         inc.severity = data['severity']
+    if 'title' in data:
+        inc.title = data['title']
+    if 'description' in data:
+        inc.description = data['description']
     
     db.session.commit()
     return jsonify(inc.to_dict())
+
+@app.route('/api/incidents/<inc_id>', methods=['DELETE'])
+def delete_incident(inc_id):
+    inc = Incident.query.get(inc_id)
+    if inc:
+        db.session.delete(inc)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': f'Incident {inc_id} permanently removed.'})
+    return jsonify({'error': 'Incident not found'}), 404
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():

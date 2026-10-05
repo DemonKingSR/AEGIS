@@ -316,11 +316,10 @@ function initThreatAnalyzer() {
             sampleGroup.appendChild(btn);
         });
 
-        // Load default first sample into textarea
         payloadInput.value = cfg.samples[0].val;
     }
 
-    // Radio Pill Mode Switch Handlers (Payload CNN vs Vector ANN vs Sequence LSTM)
+    // Radio Pill Handlers
     radioPills.forEach(pill => {
         pill.addEventListener('click', () => {
             radioPills.forEach(p => p.classList.remove('active'));
@@ -336,10 +335,9 @@ function initThreatAnalyzer() {
         });
     });
 
-    // Initial render for default payload mode
     renderModeSamples('payload');
 
-    // Analysis Execution Button
+    // Analysis Button
     if (btnRun) {
         btnRun.addEventListener('click', async () => {
             const inputText = payloadInput.value.trim();
@@ -394,7 +392,6 @@ function initThreatAnalyzer() {
     }
 }
 
-// Fallback inference engine matching model backend signatures
 function runClientSideInferenceFallback(text, mode = 'payload') {
     const lower = text.toLowerCase();
     let isThreat = false;
@@ -498,7 +495,7 @@ function renderInferenceResults(res) {
 }
 
 // -------------------------------------------------------------
-// 5. Incident Management Portal & API Integration
+// 5. INCIDENT HUB PERSISTENT CRUD & REMOVE HANDLERS
 // -------------------------------------------------------------
 let mockIncidents = [
     { id: 'INC-2026-101', title: 'SQL Injection attempt on auth portal', attack: 'SQL Injection', severity: 'Critical', ip: '203.0.113.195', status: 'Open', created: '10 Mins ago' },
@@ -512,12 +509,12 @@ async function loadIncidents() {
         const res = await fetch('/api/incidents');
         if (res.ok) {
             const data = await res.json();
-            if (data && data.length > 0) {
+            if (data && data.length >= 0) {
                 mockIncidents = data;
             }
         }
     } catch (e) {
-        console.log('Using initial incident dataset');
+        console.log('Using local fallback incidents');
     }
     renderIncidentsTable();
     renderDashboardIncidents();
@@ -540,7 +537,7 @@ function renderIncidentsTable() {
 
     tbody.innerHTML = '';
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">No matching incidents found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">No matching incidents found in database.</td></tr>`;
         return;
     }
 
@@ -562,24 +559,58 @@ function renderIncidentsTable() {
                 </select>
             </td>
             <td>${inc.created}</td>
-            <td>
+            <td style="display: flex; gap: 0.4rem;">
                 <button class="btn-sm btn-outline btn-view-inc" data-id="${inc.id}">Details</button>
+                <button class="btn-sm btn-danger btn-delete-inc" data-id="${inc.id}"><i class="fa-solid fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 
-    // Add status change listener
+    // 1. Persistent Status Change Event Listeners (PUT /api/incidents/<id>)
     document.querySelectorAll('.status-select').forEach(sel => {
-        sel.addEventListener('change', (e) => {
+        sel.addEventListener('change', async (e) => {
             const incId = e.target.getAttribute('data-id');
             const newStat = e.target.value;
             const inc = mockIncidents.find(i => i.id === incId);
             if (inc) {
                 inc.status = newStat;
-                showToast(`Incident ${incId} updated to ${newStat}`, 'info');
                 renderDashboardIncidents();
                 updateOpenCountBadge();
+
+                // Persist status change to Flask database
+                try {
+                    await fetch(`/api/incidents/${incId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStat })
+                    });
+                    showToast(`Incident ${incId} status permanently set to '${newStat}'`, 'info');
+                } catch (err) {
+                    showToast(`Incident ${incId} updated locally`, 'info');
+                }
+            }
+        });
+    });
+
+    // 2. Persistent Delete / Remove Event Listeners (DELETE /api/incidents/<id>)
+    document.querySelectorAll('.btn-delete-inc').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const incId = btn.getAttribute('data-id');
+            if (!confirm(`Are you sure you want to permanently remove incident ticket ${incId}?`)) return;
+
+            // Remove from local array
+            mockIncidents = mockIncidents.filter(i => i.id !== incId);
+            renderIncidentsTable();
+            renderDashboardIncidents();
+            updateOpenCountBadge();
+
+            // Send DELETE request to SQLite Database
+            try {
+                await fetch(`/api/incidents/${incId}`, { method: 'DELETE' });
+                showToast(`Incident ticket ${incId} permanently removed from database!`, 'success');
+            } catch (err) {
+                showToast(`Incident ${incId} removed locally`, 'success');
             }
         });
     });
